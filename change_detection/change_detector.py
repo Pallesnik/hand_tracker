@@ -53,13 +53,19 @@ while True:
             max_area = area
             ci = i
     if len(contours) > 0:
-        (x, y, w, h) = cv2.boundingRect(contours[0])
+        (x, y, w, h) = cv2.boundingRect(contours[ci])
         cv2.rectangle(resized, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        moments = cv2.moments(contours[ci])
+        if moments['m00'] != 0:  # this gives the centre of the moments [3]
+            cx = int(moments['m10'] / moments['m00'])  # cx = M10/M00
+            cy = int(moments['m01'] / moments['m00'])  # cy = M01/M00
+        center = (cx, cy)
+        cv2.circle(resized, center, 5, [0, 0, 255], 2)  # draws small circle at the center moment
 
     cv2.imshow("FIRST", resized)
-    cv2.imshow("SECOND", firstFrame)
-    cv2.imshow("ABS-DIFF", frameDelta)
-    cv2.imshow("THRESH", thresh)
+    #cv2.imshow("SECOND", firstFrame)
+    #cv2.imshow("ABS-DIFF", frameDelta)
+    #cv2.imshow("THRESH", thresh)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
