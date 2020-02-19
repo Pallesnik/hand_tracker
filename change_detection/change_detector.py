@@ -61,7 +61,7 @@ while True:
             cy = int(moments['m01'] / moments['m00'])  # cy = M01/M00
         center = (cx, cy)
         cv2.circle(resized, center, 5, [0, 0, 255], 2)  # draws small circle at the center moment
-
+ dicks
     cv2.imshow("FIRST", resized)
     #cv2.imshow("SECOND", firstFrame)
     #cv2.imshow("ABS-DIFF", frameDelta)
