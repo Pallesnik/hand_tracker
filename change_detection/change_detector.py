@@ -5,7 +5,7 @@ import cv2
 
 dim = (600, 400) # resizing image
 
-vc = cv2.VideoCapture("/home/peter/PycharmProjects/image_processing_assignment_1/final2.mp4") # video capture [1]
+vc = cv2.VideoCapture("/home/peter/PycharmProjects/image_processing_assignment_1/coogan.mp4") # video capture [1]
 
 out = cv2.VideoWriter('output.mp4', -1, 20.0, (640,480))
 
