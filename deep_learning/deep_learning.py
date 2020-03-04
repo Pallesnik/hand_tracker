@@ -53,6 +53,9 @@ for features, label in training_data:
 
 X = np.array(X).reshape(-1, IMG_SIZE)
 
+print(X.shape[1:])
+exit()
+
 pickle_out = open("X.pickle", "wb")
 pickle.dump(X, pickle_out)
 pickle_out.close()
@@ -90,4 +93,4 @@ model.compile(loss='binary_crossentropy',
               optimizer='adam',
               metrics=['accuracy'])
 
-model.fit(X, y, batch_size=32, epochs=4, validation_split=0.3)
+model.fit(X, y, batch_size=32, epochs=4, validation_split=0.1)
