@@ -36,9 +36,6 @@ while (check):
 
         contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
-        # for c in contours:
-        # compute the bounding box for the contour, draw it on the frame,
-        # and update the text
         max_area = 0
         for i in range(len(contours)):  # finding largest contour by area [3]
             contour = contours[i]
