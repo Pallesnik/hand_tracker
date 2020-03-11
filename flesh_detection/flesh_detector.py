@@ -56,8 +56,19 @@ while (check):
             center = (cx, cy)
             cv2.circle(resized, center, 5, [0, 0, 255], 2)  # draws small circle at the center moment
             hull = cv2.convexHull(contours[ci])
-            cv2.drawContours(resized, [contours[ci]], 0, (0, 255, 0), 2)
-            cv2.drawContours(resized, [hull], 0, (0, 0, 255), 2)
+            defects = cv2.convexityDefects(contours[ci], hull)
+
+            if len(defects) > 0:
+                for i in range(defects.shape[0]):
+                    s, e, f, d = defects[i, 0]
+                    start = tuple(contours[ci][s][0])
+                    end = tuple(contours[ci][e][0])
+                    far = tuple(contours[ci][f][0])
+                    cv2.line(resized, start, end, [0, 255, 0], 2)
+                    cv2.circle(resized, far, 5, [0, 0, 255], -1)
+            else:
+                cv2.drawContours(resized, [contours[ci]], 0, (0, 255, 0), 2)
+                cv2.drawContours(resized, [hull], 0, (0, 0, 255), 2)
 
         cv2.imshow("FIRST", resized)
         # cv2.imshow("SECOND", firstFrame)
