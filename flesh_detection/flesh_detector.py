@@ -17,8 +17,8 @@ fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 out = cv2.VideoWriter("output.mp4", fourcc, FPS, dim, True)
 (check, frame) = vc.read()
 
-while (check):
-    try:
+while check:
+    if frame is not None:
         shape = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
 
         resized = cv2.resize(frame, dim, interpolation=cv2.INTER_AREA)
@@ -53,10 +53,13 @@ while (check):
             center = (cx, cy)
             cv2.circle(resized, center, 5, [0, 0, 255], 2)  # draws small circle at the center moment
             hull = cv2.convexHull(contours[ci])
-            defects = cv2.convexityDefects(contours[ci], hull)
+            hull2 = cv2.convexHull(contours[ci], returnPoints=False)
+            defects = cv2.convexityDefects(contours[ci], hull2)
+            #print(defects)
 
-            if len(defects) > 0:
+            if defects is not None:
                 for i in range(defects.shape[0]):
+                    #print("defect no. ", i)
                     s, e, f, d = defects[i, 0]
                     start = tuple(contours[ci][s][0])
                     end = tuple(contours[ci][e][0])
@@ -79,7 +82,11 @@ while (check):
 
         rval, frame = vc.read()
 
-    except:
+    #except:
+    #    continue
+
+    else:
+        print("done")
         break
 
 vc.release()
