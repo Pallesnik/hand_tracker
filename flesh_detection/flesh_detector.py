@@ -12,6 +12,7 @@ height = np.int(vc.get(cv2.CAP_PROP_FRAME_HEIGHT))  # float
 Nframes = np.int(vc.get(cv2.CAP_PROP_FRAME_COUNT))
 FPS = np.int(vc.get(cv2.CAP_PROP_FPS))
 dim = (640, 480)  # resizing image
+last_position = [0] * 100
 
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 out = cv2.VideoWriter("output.mp4", fourcc, FPS, dim, True)
@@ -55,17 +56,40 @@ while check:
             hull = cv2.convexHull(contours[ci])
             hull2 = cv2.convexHull(contours[ci], returnPoints=False)
             defects = cv2.convexityDefects(contours[ci], hull2)
+            num_def = 0
             #print(defects)
 
             if defects is not None:
                 for i in range(defects.shape[0]):
-                    #print("defect no. ", i)
-                    s, e, f, d = defects[i, 0]
-                    start = tuple(contours[ci][s][0])
-                    end = tuple(contours[ci][e][0])
-                    far = tuple(contours[ci][f][0])
-                    cv2.line(resized, start, end, [0, 255, 0], 2)
-                    cv2.circle(resized, far, 5, [0, 0, 255], -1)
+                    if defects.any():
+                        #print("defect no. ", i)
+                        s, e, f, d = defects[i, 0]
+                        print(d)
+                        if d > 1600:
+                            start = tuple(contours[ci][s][0])
+                            end = tuple(contours[ci][e][0])
+                            far = tuple(contours[ci][f][0])
+                            if last_position[i] is 0:
+                                cv2.line(resized, start, end, [0, 255, 0], 2)
+                                cv2.circle(resized, far, 5, [0, 0, 255], -1)
+                            else:
+                                cv2.line(resized, start, end, [0, 255, 0], 2)
+                                cv2.circle(resized, far, 5, [0, 0, 255], -1)
+                                cv2.circle(resized, last_position[i], 5, [255, 0, 0], -1)
+                                cv2.line(resized, last_position[i], far, [255, 0, 0], 2)
+                                print("poop")
+                            last_position[i] = tuple(contours[ci][f][0])
+                            print(last_position[i])
+                            num_def = num_def + 1
+                    else:
+                        cv2.drawContours(resized, [contours[ci]], 0, (0, 255, 0), 2)
+                        cv2.drawContours(resized, [hull], 0, (0, 0, 255), 2)
+                if num_def >= 6:
+                    cv2.putText(resized, 'Paper', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
+                elif num_def > 4 and num_def < 6:
+                    cv2.putText(resized, 'Scissors', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
+                else:
+                    cv2.putText(resized, 'Rock', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
             else:
                 cv2.drawContours(resized, [contours[ci]], 0, (0, 255, 0), 2)
                 cv2.drawContours(resized, [hull], 0, (0, 0, 255), 2)
