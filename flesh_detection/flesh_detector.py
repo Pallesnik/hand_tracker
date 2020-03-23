@@ -3,6 +3,7 @@ import datetime
 import time
 import cv2
 import numpy as np
+import math
 import matplotlib.pyplot as plt
 
 vc = cv2.VideoCapture("lubin.mp4")  # video capture [1]
@@ -64,29 +65,41 @@ while check:
                     if defects.any():
                         #print("defect no. ", i)
                         s, e, f, d = defects[i, 0]
-                        print(d)
-                        if d > 1600:
-                            start = tuple(contours[ci][s][0])
-                            end = tuple(contours[ci][e][0])
-                            far = tuple(contours[ci][f][0])
-                            if last_position[i] is 0:
-                                cv2.line(resized, start, end, [0, 255, 0], 2)
-                                cv2.circle(resized, far, 5, [0, 0, 255], -1)
-                            else:
-                                cv2.line(resized, start, end, [0, 255, 0], 2)
-                                cv2.circle(resized, far, 5, [0, 0, 255], -1)
-                                cv2.circle(resized, last_position[i], 5, [255, 0, 0], -1)
-                                cv2.line(resized, last_position[i], far, [255, 0, 0], 2)
-                                print("poop")
-                            last_position[i] = tuple(contours[ci][f][0])
-                            print(last_position[i])
-                            num_def = num_def + 1
+                        start = tuple(contours[ci][s][0])
+                        end = tuple(contours[ci][e][0])
+                        far = tuple(contours[ci][f][0])
+
+                        a = math.sqrt((end[0] - start[0]) ** 2 + (end[1] - start[1]) ** 2)
+                        b = math.sqrt((far[0] - start[0]) ** 2 + (far[1] - start[1]) ** 2)
+                        c = math.sqrt((end[0] - far[0]) ** 2 + (end[1] - far[1]) ** 2)
+                        angle = (math.acos((b ** 2 + c ** 2 - a ** 2) / (2 * b * c)) * 180) / 3.14
+
+                        # if angle > 90 draw a circle at the far point
+                        if angle <= 90:
+                            num_def += 1
+                            cv2.circle(resized, far, 5, [255, 0, 0], -1)
+
+                        cv2.line(num_def, start, end, [0, 255, 0], 2)
+                        cv2.drawContours(resized, [contours[ci]], 0, (0, 255, 0), 2)
+                        cv2.drawContours(resized, [hull], 0, (0, 0, 255), 2)
+                            # if last_position[i] is 0:
+                            #     cv2.line(resized, start, end, [0, 255, 0], 2)
+                            #     cv2.circle(resized, far, 5, [0, 0, 255], -1)
+                            # else:
+                            #     cv2.line(resized, start, end, [0, 255, 0], 2)
+                            #     cv2.circle(resized, far, 5, [0, 0, 255], -1)
+                            #     cv2.circle(resized, last_position[i], 5, [255, 0, 0], -1)
+                            #     cv2.line(resized, last_position[i], far, [255, 0, 0], 2)
+                            #     print("poop")
+                            # last_position[i] = tuple(contours[ci][f][0])
+                            # print(last_position[i])
+                            # num_def = num_def + 1
                     else:
                         cv2.drawContours(resized, [contours[ci]], 0, (0, 255, 0), 2)
                         cv2.drawContours(resized, [hull], 0, (0, 0, 255), 2)
-                if num_def >= 6:
+                if num_def >= 3:
                     cv2.putText(resized, 'Paper', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
-                elif num_def > 4 and num_def < 6:
+                elif num_def >= 1 and num_def < 3:
                     cv2.putText(resized, 'Scissors', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
                 else:
                     cv2.putText(resized, 'Rock', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
