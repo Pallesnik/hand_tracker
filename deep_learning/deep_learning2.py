@@ -29,20 +29,20 @@ def save():
 
 def create_model():
     classifier = Sequential()  # Initialising the CNN
-    # Step 1 - Convolution
-    classifier.add(Conv2D(32, (3, 3), input_shape=(64, 64, 3), activation='relu'))
 
-    # Step 2 - Pooling
+    # POSSIBLE FIRST LAYER? COULD BE OVERKILL/ OR COULD EVEN OVERFIT
+    classifier.add(Conv2D(128, (2, 2), input_shape=(64, 64, 3), activation='relu'))
+    classifier.add(MaxPooling2D(pool_size=(2, 2)))
+
+    # Layer 1
+    classifier.add(Conv2D(128, (2, 2), input_shape=(64, 64, 3), activation='relu'))
     classifier.add(MaxPooling2D(pool_size=(2, 2)))
 
     # Adding a second convolutional layer
-    classifier.add(Conv2D(32, (3, 3), activation='relu'))
+    classifier.add(Conv2D(64, (3, 3), activation='relu'))
     classifier.add(MaxPooling2D(pool_size=(2, 2)))
 
-    classifier.add(Conv2D(32, (3, 3), activation='relu'))
-    classifier.add(MaxPooling2D(pool_size=(2, 2)))
-
-    classifier.add(Conv2D(32, (3, 3), activation='relu'))
+    classifier.add(Conv2D(32, (4, 4), activation='relu'))
     classifier.add(MaxPooling2D(pool_size=(2, 2)))
 
     # Step 3 - Flattening
@@ -50,7 +50,7 @@ def create_model():
 
     # Step 4 - Full connection
     classifier.add(Dense(units=128, activation='relu'))
-    classifier.add(Dense(units=128, activation='relu'))
+    classifier.add(Dense(units=256, activation='relu')) #"""UNCOMMENT THIS IS ACCURACY DOESNT GO UP | MAYBE MAKE IT 128 INITIALLY"""
     classifier.add(Dense(units=1, activation='sigmoid'))
 
     # Compiling the CNN
@@ -70,7 +70,7 @@ def train_data(classifier):
                                                 target_size=(64, 64), batch_size=2, class_mode='binary')
 
     classifier.fit_generator(training_set, steps_per_epoch=1000,
-                             epochs=5, validation_data=test_set, validation_steps=1000)
+                             epochs=20, validation_data=test_set, validation_steps=1000)
 
     save()
 
