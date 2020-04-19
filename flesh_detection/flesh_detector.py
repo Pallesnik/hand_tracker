@@ -18,6 +18,9 @@ last_position = [0] * 100
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 out = cv2.VideoWriter("output.mp4", fourcc, FPS, dim, True)
 (check, frame) = vc.read()
+last_frame = frame
+points_to_track = [0] *30
+k = 0
 
 while check:
     if frame is not None:
@@ -39,6 +42,7 @@ while check:
         contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
         max_area = 0
+        k = 0
         for i in range(len(contours)):  # finding largest contour by area [3]
             contour = contours[i]
             area = cv2.contourArea(contour)
@@ -78,10 +82,16 @@ while check:
                         if angle <= 90:
                             num_def += 1
                             cv2.circle(resized, far, 5, [255, 0, 0], -1)
+                            points_to_track[k] = far
+                            k = k + 1
+                            #if last_position[i] is not 0:
+                            #    cv2.circle(resized, last_position[i], 5, [255, 0, 0], -1)
+                            #    cv2.line(resized, last_position[i], far, [0, 255, 0], 2)
 
                         cv2.line(num_def, start, end, [0, 255, 0], 2)
                         cv2.drawContours(resized, [contours[ci]], 0, (0, 255, 0), 2)
                         cv2.drawContours(resized, [hull], 0, (0, 0, 255), 2)
+                        #last_position[i] = far
                             # if last_position[i] is 0:
                             #     cv2.line(resized, start, end, [0, 255, 0], 2)
                             #     cv2.circle(resized, far, 5, [0, 0, 255], -1)
@@ -90,13 +100,20 @@ while check:
                             #     cv2.circle(resized, far, 5, [0, 0, 255], -1)
                             #     cv2.circle(resized, last_position[i], 5, [255, 0, 0], -1)
                             #     cv2.line(resized, last_position[i], far, [255, 0, 0], 2)
-                            #     print("poop")
                             # last_position[i] = tuple(contours[ci][f][0])
                             # print(last_position[i])
                             # num_def = num_def + 1
                     else:
                         cv2.drawContours(resized, [contours[ci]], 0, (0, 255, 0), 2)
                         cv2.drawContours(resized, [hull], 0, (0, 0, 255), 2)
+
+                lk_params = dict(winSize=(15, 15), maxLevel=2, criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.01))
+                p1, status, error = cv2.calcOpticalFlowPyrLK(last_frame, resized, points_to_track, None, **lk_params)
+
+                N = np.shape(points_to_track)[0]
+                for i in range(0, N):
+                    cv2.line(resized, points_to_track[i], p1, [0, 255, 0], 2)
+
                 if num_def >= 3:
                     cv2.putText(resized, 'Paper', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
                 elif num_def >= 1 and num_def < 3:
@@ -106,7 +123,7 @@ while check:
             else:
                 cv2.drawContours(resized, [contours[ci]], 0, (0, 255, 0), 2)
                 cv2.drawContours(resized, [hull], 0, (0, 0, 255), 2)
-
+        last_frame = resized
         cv2.imshow("FIRST", resized)
         # cv2.imshow("SECOND", firstFrame)
         # cv2.imshow("ABS-DIFF", frameDelta)
