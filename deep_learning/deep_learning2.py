@@ -31,8 +31,8 @@ def create_model():
     classifier = Sequential()  # Initialising the CNN
 
     # POSSIBLE FIRST LAYER? COULD BE OVERKILL/ OR COULD EVEN OVERFIT
-    classifier.add(Conv2D(128, (2, 2), input_shape=(64, 64, 3), activation='relu'))
-    classifier.add(MaxPooling2D(pool_size=(2, 2)))
+    #classifier.add(Conv2D(256, (2, 2), input_shape=(64, 64, 3), activation='relu'))
+    #classifier.add(MaxPooling2D(pool_size=(2, 2)))
 
     # Layer 1
     classifier.add(Conv2D(128, (2, 2), input_shape=(64, 64, 3), activation='relu'))
@@ -50,7 +50,7 @@ def create_model():
 
     # Step 4 - Full connection
     classifier.add(Dense(units=128, activation='relu'))
-    classifier.add(Dense(units=256, activation='relu')) #"""UNCOMMENT THIS IS ACCURACY DOESNT GO UP | MAYBE MAKE IT 128 INITIALLY"""
+    classifier.add(Dense(units=128, activation='relu')) #"""UNCOMMENT THIS IS ACCURACY DOESNT GO UP | MAYBE MAKE IT 128 INITIALLY"""
     classifier.add(Dense(units=1, activation='sigmoid'))
 
     # Compiling the CNN
@@ -63,14 +63,14 @@ def train_data(classifier):
 
     test_datagen = ImageDataGenerator(rescale=1. / 255)
 
-    training_set = train_datagen.flow_from_directory('dataset/rps_train',
-                                                     target_size=(64, 64), batch_size=2, class_mode='binary')
+    training_set = train_datagen.flow_from_directory('dataset/significant-asl-sign-language-alphabet-dataset/Training Set',
+                                                     target_size=(64, 64), batch_size=20, class_mode='binary')
 
-    test_set = test_datagen.flow_from_directory('dataset/rps_test',
-                                                target_size=(64, 64), batch_size=2, class_mode='binary')
+    test_set = test_datagen.flow_from_directory('dataset/significant-asl-sign-language-alphabet-dataset/significant-asl-alphabet-training-set/Training Set',
+                                                target_size=(64, 64), batch_size=20, class_mode='binary')
 
     classifier.fit_generator(training_set, steps_per_epoch=1000,
-                             epochs=20, validation_data=test_set, validation_steps=1000)
+                             epochs=5, validation_data=test_set, validation_steps=1000)
 
     save()
 
