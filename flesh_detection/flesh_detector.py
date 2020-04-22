@@ -18,9 +18,11 @@ last_position = [0] * 100
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 out = cv2.VideoWriter("output.mp4", fourcc, FPS, dim, True)
 (check, frame) = vc.read()
-last_frame = frame
 points_to_track = [0] *30
 k = 0
+f = 0
+
+prevFrame = frame
 
 while check:
     if frame is not None:
@@ -84,35 +86,16 @@ while check:
                             cv2.circle(resized, far, 5, [255, 0, 0], -1)
                             points_to_track[k] = far
                             k = k + 1
-                            #if last_position[i] is not 0:
-                            #    cv2.circle(resized, last_position[i], 5, [255, 0, 0], -1)
-                            #    cv2.line(resized, last_position[i], far, [0, 255, 0], 2)
 
                         cv2.line(num_def, start, end, [0, 255, 0], 2)
                         cv2.drawContours(resized, [contours[ci]], 0, (0, 255, 0), 2)
                         cv2.drawContours(resized, [hull], 0, (0, 0, 255), 2)
-                        #last_position[i] = far
-                            # if last_position[i] is 0:
-                            #     cv2.line(resized, start, end, [0, 255, 0], 2)
-                            #     cv2.circle(resized, far, 5, [0, 0, 255], -1)
-                            # else:
-                            #     cv2.line(resized, start, end, [0, 255, 0], 2)
-                            #     cv2.circle(resized, far, 5, [0, 0, 255], -1)
-                            #     cv2.circle(resized, last_position[i], 5, [255, 0, 0], -1)
-                            #     cv2.line(resized, last_position[i], far, [255, 0, 0], 2)
-                            # last_position[i] = tuple(contours[ci][f][0])
-                            # print(last_position[i])
-                            # num_def = num_def + 1
+
                     else:
                         cv2.drawContours(resized, [contours[ci]], 0, (0, 255, 0), 2)
                         cv2.drawContours(resized, [hull], 0, (0, 0, 255), 2)
 
-                lk_params = dict(winSize=(15, 15), maxLevel=2, criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.01))
-                p1, status, error = cv2.calcOpticalFlowPyrLK(last_frame, resized, points_to_track, None, **lk_params)
-
-                N = np.shape(points_to_track)[0]
-                for i in range(0, N):
-                    cv2.line(resized, points_to_track[i], p1, [0, 255, 0], 2)
+                lk_params = dict(winSize=(15,15),maxLevel=2,criteria=(cv2.TERM_CRITERIA_EPS|cv2.TERM_CRITERIA_COUNT,10,0.01))
 
                 if num_def >= 3:
                     cv2.putText(resized, 'Paper', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
@@ -120,10 +103,63 @@ while check:
                     cv2.putText(resized, 'Scissors', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
                 else:
                     cv2.putText(resized, 'Rock', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
+
+                # converting to grayscale:
+                G = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
+
+                # Smoothing the image:
+                #G = cv2.medianBlur(src=G, ksize=5)
+
+                # making a copy for drawing:
+                #Output = resized.copy()
+
+                dots = cv2.goodFeaturesToTrack(G, maxCorners=30, qualityLevel=0.001, minDistance=10)
+
+                # number of dots:
+                N = np.shape(dots)[0]
+
+                # drawing each dot:
+                for n in range(0, N):
+                    j = int(dots[n, :, 0][0])
+                    i = int(dots[n, :, 1][0])
+
+                if f is 0:
+                    prevPts = dots.copy()
+
+                # if this is not the first frame:
+                if f > 0:
+                    # delete the dots:
+                    del dots
+
+                    # Calculate optical flow:
+                    dots, status, error = cv2.calcOpticalFlowPyrLK(prevImg=prevFrame, nextImg=G, prevPts=prevPts,
+                                                                   nextPts=None, **lk_params)
+
+                    # number of dots:
+                    N = np.shape(dots)[0]
+
+                    # If there are dots to draw:
+                    if N > 0:
+                        # drawing each dot:
+                        for n in range(0, N):
+                            j = int(dots[n, :, 0][0])
+                            i = int(dots[n, :, 1][0])
+
+                            if status[n][0] == 0:
+                                # if it didn't work, go back to the previous point:
+                                dots[n] = prevPts[n]
+
+                            if status[n][0] == 1:
+                                # Make the successful Lucas-Kanade dots red:
+                                resized[i - 3:i + 3, j - 3:j + 3] = (0, 0, 255)
+
+                # Get the current frame and dots ready for the next round:
+                prevPts = dots.copy()
+                prevFrame = G.copy()
+
             else:
                 cv2.drawContours(resized, [contours[ci]], 0, (0, 255, 0), 2)
                 cv2.drawContours(resized, [hull], 0, (0, 0, 255), 2)
-        last_frame = resized
         cv2.imshow("FIRST", resized)
         # cv2.imshow("SECOND", firstFrame)
         # cv2.imshow("ABS-DIFF", frameDelta)
