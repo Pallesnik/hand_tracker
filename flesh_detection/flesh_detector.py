@@ -19,9 +19,10 @@ fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 out = cv2.VideoWriter("output.mp4", fourcc, FPS, dim, True)
 (check, frame) = vc.read()
 points_to_track = [0] *30
-k = 0
+K = 20
 f = 0
 lk_params = dict(winSize=(15,15),maxLevel=2,criteria=(cv2.TERM_CRITERIA_EPS|cv2.TERM_CRITERIA_COUNT,10,0.01))
+criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_MAX_ITER, 10, 0.1)
 
 while check:
     if frame is not None:
@@ -84,8 +85,8 @@ while check:
                         if angle <= 90:
                             num_def += 1
                             cv2.circle(resized, far, 5, [255, 0, 0], -1)
-                            points_to_track[k] = far
-                            k = k + 1
+                            #points_to_track[k] = far
+                            #k = k + 1
 
                         cv2.line(num_def, start, end, [0, 255, 0], 2)
                         cv2.drawContours(resized, [contours[ci]], 0, (0, 255, 0), 2)
@@ -109,59 +110,61 @@ while check:
                 cv2.drawContours(resized, [hull], 0, (0, 0, 255), 2)
 
         G = cv2.cvtColor(resized2, cv2.COLOR_BGR2GRAY)
-
+        #G = resized2
         # Smoothing the image:
         #G = cv2.medianBlur(src=G, ksize=5)
 
         # making a copy for drawing:
         #Output = resized.copy()
 
-        dots = cv2.goodFeaturesToTrack(G, maxCorners=250, qualityLevel=0.0001, minDistance=50)
+        dots = cv2.goodFeaturesToTrack(G, maxCorners=500, qualityLevel=0.000001, minDistance=10)
+
+        Z = np.float32(dots)
+        Z = np.transpose(Z)
+
+        J, label, centre = cv2.kmeans(Z, K, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
 
         # number of dots:
-        N = np.shape(dots)[0]
+        N = np.shape(centre)[0]
 
         # drawing each dot:
         for n in range(0, N):
-            j = int(dots[n, :, 0][0])
-            i = int(dots[n, :, 1][0])
-
-        if f is 0:
-            prevPts = dots.copy()
+            j = int(centre[n, :, 0][0])
+            i = int(centre[n, :, 1][0])
 
         # if this is not the first frame:
         if f > 0:
             # delete the dots:
-            del dots
+            del centre
 
             # Calculate optical flow:
-            dots, status, error = cv2.calcOpticalFlowPyrLK(prevImg=prevFrame, nextImg=G, prevPts=prevPts,
+            centre, status, error = cv2.calcOpticalFlowPyrLK(prevImg=prevFrame, nextImg=G, prevPts=prevPts,
                                                            nextPts=None, **lk_params)
 
             # number of dots:
-            N = np.shape(dots)[0]
+            N = np.shape(centre)[0]
 
             # If there are dots to draw:
             if N > 0:
                 # drawing each dot:
                 for n in range(0, N):
-                    j = int(dots[n, :, 0][0])
-                    i = int(dots[n, :, 1][0])
+                    j = int(centre[n, :, 0][0])
+                    i = int(centre[n, :, 1][0])
 
                     if status[n][0] == 0:
                         # if it didn't work, go back to the previous point:
-                        dots[n] = prevPts[n]
+                        centre[n] = prevPts[n]
 
                     if status[n][0] == 1:
                         # Make the successful Lucas-Kanade dots red:
                         resized[i - 3:i + 3, j - 3:j + 3] = (0, 0, 255)
 
         # Get the current frame and dots ready for the next round:
-        prevPts = dots.copy()
+        prevPts = centre.copy()
         prevFrame = G.copy()
 
         cv2.imshow("FIRST", resized)
-        #cv2.imshow("second", thresh1)
+        cv2.imshow("second", thresh1)
         # cv2.imshow("SECOND", firstFrame)
         # cv2.imshow("ABS-DIFF", frameDelta)
         # cv2.imshow("THRESH", thresh)
