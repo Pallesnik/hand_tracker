@@ -36,13 +36,16 @@ def create_model():
 
     # Layer 1
     classifier.add(Conv2D(128, (2, 2), input_shape=(64, 64, 3), activation='relu'))
+    classifier.add(Conv2D(64, (3, 3), activation='relu'))
     classifier.add(MaxPooling2D(pool_size=(2, 2)))
 
     # Adding a second convolutional layer
     classifier.add(Conv2D(64, (3, 3), activation='relu'))
+    classifier.add(Conv2D(64, (3, 3), activation='relu'))
     classifier.add(MaxPooling2D(pool_size=(2, 2)))
 
     classifier.add(Conv2D(32, (4, 4), activation='relu'))
+    classifier.add(Conv2D(64, (3, 3), activation='relu'))
     classifier.add(MaxPooling2D(pool_size=(2, 2)))
 
     # Step 3 - Flattening
@@ -51,7 +54,7 @@ def create_model():
     # Step 4 - Full connection
     classifier.add(Dense(units=128, activation='relu'))
     classifier.add(Dense(units=128, activation='relu')) #"""UNCOMMENT THIS IS ACCURACY DOESNT GO UP | MAYBE MAKE IT 128 INITIALLY"""
-    classifier.add(Dense(units=1, activation='sigmoid'))
+    #classifier.add(Dense(units=1, activation='sigmoid'))
 
     # Compiling the CNN
     classifier.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
@@ -64,10 +67,10 @@ def train_data(classifier):
     test_datagen = ImageDataGenerator(rescale=1. / 255)
 
     training_set = train_datagen.flow_from_directory('dataset/significant-asl-sign-language-alphabet-dataset/Training Set',
-                                                     target_size=(64, 64), batch_size=20, class_mode='binary')
+                                                     target_size=(64, 64), batch_size=50, class_mode='binary')
 
     test_set = test_datagen.flow_from_directory('dataset/significant-asl-sign-language-alphabet-dataset/significant-asl-alphabet-training-set/Training Set',
-                                                target_size=(64, 64), batch_size=20, class_mode='binary')
+                                                target_size=(64, 64), batch_size=50, class_mode='binary')
 
     classifier.fit_generator(training_set, steps_per_epoch=1000,
                              epochs=5, validation_data=test_set, validation_steps=1000)
