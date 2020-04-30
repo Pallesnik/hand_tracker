@@ -23,9 +23,12 @@ K = 20
 f = 0
 lk_params = dict(winSize=(15,15),maxLevel=2,criteria=(cv2.TERM_CRITERIA_EPS|cv2.TERM_CRITERIA_COUNT,10,0.01))
 criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_MAX_ITER, 10, 0.1)
+num_frames = 0
+certain_frames = 0
 
 while check:
     if frame is not None:
+        num_frames = num_frames + 1
         shape = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
 
         resized = cv2.resize(frame, dim, interpolation=cv2.INTER_AREA)
@@ -36,8 +39,8 @@ while check:
 
         # Get pointer to video frames from primary device
         imageYCrCb = cv2.cvtColor(resized, cv2.COLOR_BGR2YCR_CB)
-        thresh = cv2.inRange(imageYCrCb, min_YCrCb, max_YCrCb)
-
+        roi = cv2.inRange(imageYCrCb, min_YCrCb, max_YCrCb)
+        thresh = cv2.morphologyEx(roi, cv2.MORPH_CLOSE, shape)
         thresh1 = cv2.bitwise_and(resized, resized, mask=thresh)
 
         contours, H = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -96,12 +99,15 @@ while check:
                         cv2.drawContours(resized, [contours[ci]], 0, (0, 255, 0), 2)
                         cv2.drawContours(resized, [hull], 0, (0, 0, 255), 2)
 
-                if num_def >= 3:
+                if num_def == 4:
                     cv2.putText(resized, 'Paper', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
-                elif num_def >= 1 and num_def < 3:
+                    certain_frames = certain_frames + 1
+                elif num_def == 2:
                     cv2.putText(resized, 'Scissors', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
-                else:
+                    certain_frames = certain_frames + 1
+                elif num_def == 0:
                     cv2.putText(resized, 'Rock', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
+                    certain_frames = certain_frames + 1
 
                 # converting to grayscale:
 
@@ -122,49 +128,49 @@ while check:
         Z = np.float32(dots)
         Z = np.transpose(Z)
 
-        J, label, centre = cv2.kmeans(Z, K, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
+        #J, label, centre = cv2.kmeans(Z, K, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
 
         # number of dots:
-        N = np.shape(centre)[0]
+        N = np.shape(dots)[0]
 
         # drawing each dot:
         for n in range(0, N):
-            j = int(centre[n, :, 0][0])
-            i = int(centre[n, :, 1][0])
+            j = int(dots[n, :, 0][0])
+            i = int(dots[n, :, 1][0])
 
         # if this is not the first frame:
         if f > 0:
             # delete the dots:
-            del centre
+            del dots
 
             # Calculate optical flow:
-            centre, status, error = cv2.calcOpticalFlowPyrLK(prevImg=prevFrame, nextImg=G, prevPts=prevPts,
+            dots, status, error = cv2.calcOpticalFlowPyrLK(prevImg=prevFrame, nextImg=G, prevPts=prevPts,
                                                            nextPts=None, **lk_params)
 
             # number of dots:
-            N = np.shape(centre)[0]
+            N = np.shape(dots)[0]
 
             # If there are dots to draw:
             if N > 0:
                 # drawing each dot:
                 for n in range(0, N):
-                    j = int(centre[n, :, 0][0])
-                    i = int(centre[n, :, 1][0])
+                    j = int(dots[n, :, 0][0])
+                    i = int(dots[n, :, 1][0])
 
                     if status[n][0] == 0:
                         # if it didn't work, go back to the previous point:
-                        centre[n] = prevPts[n]
+                        dots[n] = prevPts[n]
 
                     if status[n][0] == 1:
                         # Make the successful Lucas-Kanade dots red:
                         resized[i - 3:i + 3, j - 3:j + 3] = (0, 0, 255)
 
         # Get the current frame and dots ready for the next round:
-        prevPts = centre.copy()
+        prevPts = dots.copy()
         prevFrame = G.copy()
 
         cv2.imshow("FIRST", resized)
-        cv2.imshow("second", thresh1)
+        #cv2.imshow("second", thresh1)
         # cv2.imshow("SECOND", firstFrame)
         # cv2.imshow("ABS-DIFF", frameDelta)
         # cv2.imshow("THRESH", thresh)
@@ -181,6 +187,8 @@ while check:
 
     else:
         print("done")
+        percent = (certain_frames/num_frames) * 100
+        print(percent)
         break
 
 vc.release()
