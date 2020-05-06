@@ -1,3 +1,17 @@
+# Convolutional Neural Network
+
+# Installing Theano
+# pip install --upgrade --no-deps git+git://github.com/Theano/Theano.git
+
+# Installing Tensorflow
+# pip install tensorflow
+
+# Installing Keras
+# pip install --upgrade keras
+
+# Part 1 - Building the CNN
+
+# Importing the Keras libraries and packages
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.layers import MaxPooling2D
@@ -10,7 +24,7 @@ import tensorflow
 
 
 def save():
-    classifier.save("/content/drive/My Drive/FYP Colab/gestures.h5")
+    classifier.save("gestures.h5")
     print(classifier.summary())
 
 
@@ -56,15 +70,15 @@ def create_model():
 
 def create_model2():
     classifier = Sequential()
-    classifier.add(Conv2D(filters=5, kernel_size=5, padding='same', activation='relu', input_shape=(50, 50, 3)))
-    classifier.add(MaxPooling2D(pool_size=3))
+    classifier.add(Conv2D(filters=5, kernel_size=5, padding='same', activation='relu', input_shape=(100, 100, 3)))
+    classifier.add(MaxPooling2D(pool_size=4))
     classifier.add(Conv2D(filters=15, kernel_size=5, padding='same', activation='relu'))
-    classifier.add(MaxPooling2D(pool_size=3))
-    classifier.add(Conv2D(filters=15, kernel_size=5, padding='same', activation='relu'))
-    classifier.add(MaxPooling2D(pool_size=3))
+    classifier.add(MaxPooling2D(pool_size=4))
+    #classifier.add(Conv2D(filters=15, kernel_size=5, padding='same', activation='relu'))
+    #classifier.add(MaxPooling2D(pool_size=3))
     classifier.add(Flatten())
     classifier.add(Dense(3, activation='softmax'))
-    classifier.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    classifier.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
     return classifier
 
 
@@ -73,18 +87,18 @@ def train_data(classifier):
 
     test_datagen = ImageDataGenerator(rescale=1. / 255)
 
-    training_set = train_datagen.flow_from_directory('/content/drive/My Drive/FYP Colab/rockpaperscissors/training_set',
+    training_set = train_datagen.flow_from_directory('dataset/rockpaperscissors/training_set',
                                                      target_size=(100, 100),
                                                      batch_size=1, class_mode='categorical')
 
-    test_set = test_datagen.flow_from_directory('/content/drive/My Drive/FYP Colab/rockpaperscissors/test_set',
+    test_set = test_datagen.flow_from_directory('dataset/rockpaperscissors/test_set',
                                                 target_size=(100, 100),
                                                 batch_size=1, class_mode='categorical')
 
-    classifier.fit_generator(training_set, steps_per_epoch=2492,
-                             epochs=25,
+    classifier.fit_generator(training_set, steps_per_epoch=3086,
+                             epochs=20,
                              validation_data=test_set,
-                             validation_steps=2492)
+                             validation_steps=3086)
 
     save()
 
@@ -98,8 +112,8 @@ def train_data2(classifier):
 
 if __name__ == "__main__":
 
-    if os.path.exists("/content/drive/My Drive/FYP Colab/gestures.h5"):
-        classifier = load_model("/content/drive/My Drive/FYP Colab/gestures.h5")
+    if os.path.exists("gestures.h5"):
+        classifier = load_model("gestures.h5")
         print(classifier.summary())
         print("model found")
     else:
