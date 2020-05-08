@@ -27,14 +27,17 @@ lk_params = dict(winSize=(15,15),maxLevel=2,criteria=(cv2.TERM_CRITERIA_EPS|cv2.
 criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_MAX_ITER, 10, 0.1)
 num_frames = 0
 certain_frames = 0
-paper = 0
-rock = 0
-scissors = 0
-def_rock = 0
-def_paper = 0
-def_scissors = 0
+paper, rock, scissors = 0, 0, 0
+def_rock, def_paper, def_scissors = 0, 0, 0
 label_test = 3
 correct_frames = 0
+true_pos, false_pos, true_neg, false_neg = 0, 0, 0, 0
+true_rock, true_paper, true_scissors, true_nothing = 0, 0, 0, 0
+false_rock, false_paper, false_scissors, false_nothing = 0, 0, 0, 0
+p_not_r, s_not_r, n_not_r = 0, 0, 0
+r_not_p, s_not_p, n_not_p = 0, 0, 0
+p_not_s, r_not_s, n_not_s = 0, 0, 0
+p_not_n, s_not_n, r_not_n = 0, 0, 0
 
 loc = ("test_labels.xlsx")
 wb = xlrd.open_workbook(loc)
@@ -116,6 +119,8 @@ while check:
                     rock = 0
                     scissors = 0
                     label_test = 1
+                    false_pos += 1
+                    false_paper += 1
                     if paper == 10:
                         cv2.putText(resized, 'Paper', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
                         certain_frames = certain_frames + 10
@@ -129,6 +134,8 @@ while check:
                     rock = 0
                     scissors = scissors + 1
                     label_test = 2
+                    false_pos += 1
+                    false_scissors += 1
                     if scissors == 10:
                         cv2.putText(resized, 'Scissors', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
                         certain_frames = certain_frames + 10
@@ -142,6 +149,8 @@ while check:
                     rock = rock + 1
                     scissors = 0
                     label_test = 0
+                    false_pos += 1
+                    false_rock += 1
                     if rock == 10:
                         cv2.putText(resized, 'Rock', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
                         certain_frames = certain_frames + 10
@@ -155,11 +164,66 @@ while check:
                     rock = 0
                     scissors = 0
                     label_test = 3
-                    certain_frames = certain_frames + 1
+                    false_neg += 1
+                    false_nothing += 1
+
 
                 if label_test == sheet.cell_value(num_frames, 1):
                     cv2.putText(resized, 'Label Matched', (0, 450), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
                     correct_frames = correct_frames + 1
+                    if label_test == 0:
+                        true_pos += 1
+                        true_rock += 1
+                        false_pos -= 1
+                        false_rock -= 1
+
+                    elif label_test == 1:
+                        true_pos += 1
+                        true_paper += 1
+                        false_pos -= 1
+                        false_paper -= 1
+
+                    elif label_test == 2:
+                        true_pos += 1
+                        true_scissors += 1
+                        false_pos -= 1
+                        false_scissors -= 1
+
+                    elif label_test == 3:
+                        true_neg += 1
+                        true_nothing += 1
+                        false_neg -= 1
+                        false_nothing -= 1
+
+                else:
+                    if label_test == 0:
+                        if sheet.cell_value(num_frames, 1) == 1:
+                            p_not_r += 1
+                        elif sheet.cell_value(num_frames, 1) == 2:
+                            s_not_r += 1
+                        elif sheet.cell_value(num_frames, 1) == 3:
+                            n_not_r += 1
+                    elif label_test == 1:
+                        if sheet.cell_value(num_frames, 1) == 0:
+                            r_not_p += 1
+                        elif sheet.cell_value(num_frames, 1) == 2:
+                            s_not_p += 1
+                        elif sheet.cell_value(num_frames, 1) == 3:
+                            n_not_p += 1
+                    elif label_test == 2:
+                        if sheet.cell_value(num_frames, 1) == 0:
+                            r_not_s += 1
+                        elif sheet.cell_value(num_frames, 1) == 1:
+                            p_not_s += 1
+                        elif sheet.cell_value(num_frames, 1) == 3:
+                            n_not_s += 1
+                    elif label_test == 3:
+                        if sheet.cell_value(num_frames, 1) == 0:
+                            r_not_n += 1
+                        elif sheet.cell_value(num_frames, 1) == 1:
+                            p_not_n += 1
+                        elif sheet.cell_value(num_frames, 1) == 2:
+                            s_not_n += 1
 
             else:
                 cv2.drawContours(resized, [contours[ci]], 0, (0, 255, 0), 2)
@@ -180,13 +244,46 @@ while check:
 
     else:
         print("done")
-        print(num_frames)
-        print(certain_frames)
-        print(correct_frames)
+        print("Total Frames: ", num_frames)
+        print("Certain Frames: ", certain_frames)
+        print("Correct Frames: ", correct_frames)
         percent_certain = (certain_frames/num_frames) * 100
-        print(percent_certain)
+        print("Percent Certain: ", percent_certain)
         percent_correct = (correct_frames/num_frames) * 100
-        print(percent_correct)
+        print("Percent Correct: ", percent_correct)
+        print("True Positives: ", true_pos)
+        print("False Positives: ", false_pos)
+        print("True Negatives: ", true_neg)
+        print("False Negatives: ", false_neg)
+        precision = true_pos / (true_pos + false_pos)
+        recall = true_pos / (true_pos + false_neg)
+        f_score = 2 * ((precision * recall) / (precision + recall))
+        print("F1 score: ", f_score)
+        specificity = true_neg / (true_neg + false_pos)
+        false_pos_rate = 1 - specificity
+        true_pos_rate = recall
+        print("True Positive Rate: ", true_pos_rate)
+        print("False Positive Rate: ", false_pos_rate)
+        print("True Rock: ", true_rock)
+        print("False Rock: ", false_rock)
+        print("True Paper: ", true_paper)
+        print("False Paper: ", false_paper)
+        print("True Scissors: ", true_scissors)
+        print("False Scissors: ", false_scissors)
+        print("True Nothing: ", true_nothing)
+        print("False Nothing: ", false_nothing)
+        print("Paper not Rock", p_not_r)
+        print("Scissors not Rock", s_not_r)
+        print("Nothing not Rock", n_not_r)
+        print("Rock not Paper", r_not_p)
+        print("Scissors not Paper", s_not_p)
+        print("Nothing not Paper", n_not_p)
+        print("Rock not Scissors", r_not_s)
+        print("Paper not Scissors", p_not_s)
+        print("Nothing not Scissors", n_not_s)
+        print("Rock not Nothing", r_not_n)
+        print("Paper not Nothing", p_not_n)
+        print("Scissors not Nothing", s_not_n)
         break
 
 vc.release()
