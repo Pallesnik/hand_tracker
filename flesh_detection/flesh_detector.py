@@ -110,7 +110,7 @@ while check:
                     rock = 0
                     scissors = 0
                     certain_frames = certain_frames + 1
-                    if paper >= 5:
+                    if paper >= 10:
                         cv2.putText(resized, 'Paper', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
                     else:
                         cv2.putText(resized, 'Paper', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
@@ -119,7 +119,7 @@ while check:
                     rock = 0
                     scissors = scissors + 1
                     certain_frames = certain_frames + 1
-                    if scissors >= 5:
+                    if scissors >= 10:
                         cv2.putText(resized, 'Scissors', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
                     else:
                         cv2.putText(resized, 'Scissors', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
@@ -128,7 +128,7 @@ while check:
                     rock = rock + 1
                     scissors = 0
                     certain_frames = certain_frames + 1
-                    if rock >= 5:
+                    if rock >= 10:
                         cv2.putText(resized, 'Rock', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
                     else:
                         cv2.putText(resized, 'Rock', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
