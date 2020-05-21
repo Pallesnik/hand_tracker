@@ -27,7 +27,8 @@ lk_params = dict(winSize=(15,15),maxLevel=2,criteria=(cv2.TERM_CRITERIA_EPS|cv2.
 criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_MAX_ITER, 10, 0.1)
 num_frames = 0
 certain_frames = 0
-paper, rock, scissors = 0, 0, 0
+paper, rock, scissors, nothing = 0, 0, 0, 0
+label_paper, label_rock, label_scissors, label_nothing = 0, 0, 0, 0
 def_rock, def_paper, def_scissors = 0, 0, 0
 label_test = 3
 correct_frames = 0
@@ -38,6 +39,7 @@ p_not_r, s_not_r, n_not_r = 0, 0, 0
 r_not_p, s_not_p, n_not_p = 0, 0, 0
 p_not_s, r_not_s, n_not_s = 0, 0, 0
 p_not_n, s_not_n, r_not_n = 0, 0, 0
+certainty_level = 10
 
 loc = ("test_labels.xlsx")
 wb = xlrd.open_workbook(loc)
@@ -118,82 +120,127 @@ while check:
                     paper = paper + 1
                     rock = 0
                     scissors = 0
+                    nothing = 0
                     label_test = 1
-                    false_pos += 1
-                    false_paper += 1
-                    if paper == 10:
+                    if paper == certainty_level:
                         cv2.putText(resized, 'Paper', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
-                        certain_frames = certain_frames + 10
-                    elif paper > 10:
+                        certain_frames = certain_frames + certainty_level
+                        false_pos += certainty_level
+                        false_paper += certainty_level
+                    elif paper > certainty_level:
                         cv2.putText(resized, 'Paper', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
                         certain_frames = certain_frames + 1
+                        false_pos += 1
+                        false_paper += 1
                     else:
                         cv2.putText(resized, 'Paper', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
                 elif num_def == 2:
                     paper = 0
                     rock = 0
                     scissors = scissors + 1
+                    nothing = 0
                     label_test = 2
-                    false_pos += 1
-                    false_scissors += 1
-                    if scissors == 10:
+                    if scissors == certainty_level:
                         cv2.putText(resized, 'Scissors', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
-                        certain_frames = certain_frames + 10
-                    elif scissors > 10:
+                        certain_frames = certain_frames + certainty_level
+                        false_pos += certainty_level
+                        false_scissors += certainty_level
+                    elif scissors > certainty_level:
                         cv2.putText(resized, 'Scissors', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
                         certain_frames = certain_frames + 1
+                        false_pos += 1
+                        false_scissors += 1
                     else:
                         cv2.putText(resized, 'Scissors', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
                 elif num_def == 0:
                     paper = 0
                     rock = rock + 1
                     scissors = 0
+                    nothing = 0
                     label_test = 0
-                    false_pos += 1
-                    false_rock += 1
-                    if rock == 10:
+                    if rock == certainty_level:
                         cv2.putText(resized, 'Rock', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
-                        certain_frames = certain_frames + 10
-                    elif rock > 10:
+                        certain_frames = certain_frames + certainty_level
+                        false_pos += certainty_level
+                        false_rock += certainty_level
+                    elif rock > certainty_level:
                         cv2.putText(resized, 'Rock', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
+                        false_pos += 1
                         certain_frames = certain_frames + 1
+                        false_rock += 1
                     else:
                         cv2.putText(resized, 'Rock', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
                 else:
                     paper = 0
                     rock = 0
                     scissors = 0
+                    nothing = nothing + 1
                     label_test = 3
-                    false_neg += 1
-                    false_nothing += 1
-
+                    if nothing == certainty_level:
+                        false_pos += certainty_level
+                        false_nothing += certainty_level
+                    elif nothing > certainty_level:
+                        false_pos += 1
+                        false_nothing += 1
 
                 if label_test == sheet.cell_value(num_frames, 1):
                     cv2.putText(resized, 'Label Matched', (0, 450), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
                     correct_frames = correct_frames + 1
                     if label_test == 0:
-                        true_pos += 1
-                        true_rock += 1
-                        false_pos -= 1
-                        false_rock -= 1
+                        label_paper, label_scissors, label_nothing = 0, 0, 0
+                        label_rock += 1
+                        if label_rock == certainty_level:
+                            true_pos += certainty_level
+                            true_rock += certainty_level
+                            false_pos -= certainty_level
+                            false_rock -= certainty_level
+                        elif label_rock > certainty_level:
+                            true_pos += 1
+                            true_rock += 1
+                            false_pos -= 1
+                            false_rock -= 1
 
                     elif label_test == 1:
-                        true_pos += 1
-                        true_paper += 1
-                        false_pos -= 1
-                        false_paper -= 1
+                        label_rock, label_scissors, label_nothing = 0, 0, 0
+                        label_paper += 1
+                        if label_paper == certainty_level:
+                            true_pos += certainty_level
+                            true_paper += certainty_level
+                            false_pos -= certainty_level
+                            false_paper -= certainty_level
+                        elif label_paper > certainty_level:
+                            true_pos += 1
+                            true_paper += 1
+                            false_pos -= 1
+                            false_paper -= 1
 
                     elif label_test == 2:
-                        true_pos += 1
-                        true_scissors += 1
-                        false_pos -= 1
-                        false_scissors -= 1
+                        label_paper, label_rock, label_nothing = 0, 0, 0
+                        label_scissors += 1
+                        if label_scissors == certainty_level:
+                            true_pos += certainty_level
+                            true_scissors += certainty_level
+                            false_pos -= certainty_level
+                            false_scissors -= certainty_level
+                        elif label_scissors > certainty_level:
+                            true_pos += 1
+                            true_scissors += 1
+                            false_pos -= 1
+                            false_scissors -= 1
 
                     elif label_test == 3:
-                        true_neg += 1
-                        true_nothing += 1
-                        false_neg -= 1
-                        false_nothing -= 1
+                        label_paper, label_rock, label_scissors = 0, 0, 0
+                        label_nothing += 1
+                        if label_nothing == certainty_level:
+                            true_pos += certainty_level
+                            true_nothing += certainty_level
+                            false_pos -= certainty_level
+                            false_nothing -= certainty_level
+                        elif label_nothing > certainty_level:
+                            true_neg += 1
+                            true_nothing += 1
+                            false_neg -= 1
+                            false_nothing -= 1
 
                 else:
                     if label_test == 0:
