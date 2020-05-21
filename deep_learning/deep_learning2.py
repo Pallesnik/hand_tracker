@@ -1,17 +1,3 @@
-# Convolutional Neural Network
-
-# Installing Theano
-# pip install --upgrade --no-deps git+git://github.com/Theano/Theano.git
-
-# Installing Tensorflow
-# pip install tensorflow
-
-# Installing Keras
-# pip install --upgrade keras
-
-# Part 1 - Building the CNN
-
-# Importing the Keras libraries and packages
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.layers import MaxPooling2D
@@ -28,57 +14,15 @@ def save():
     print(classifier.summary())
 
 
-def create_model():
-    classifier = Sequential()  # Initialising the CNN
-
-    # POSSIBLE FIRST LAYER? COULD BE OVERKILL/ OR COULD EVEN OVERFIT
-    # classifier.add(Conv2D(256, (2, 2), input_shape=(64, 64, 3), activation='relu'))
-    # classifier.add(MaxPooling2D(pool_size=(2, 2)))
-
-    # Layer 1
-    classifier.add(Conv2D(64, (3, 3), input_shape=(64, 64, 3), activation='relu'))
-    classifier.add(Conv2D(64, (3, 3), activation='relu'))
-    classifier.add(MaxPooling2D(pool_size=(2, 2)))
-    classifier.add(Dropout(0.25))
-
-    # Adding a second convolutional layer
-    classifier.add(Conv2D(64, (3, 3), activation='relu'))
-    classifier.add(Conv2D(64, (3, 3), activation='relu'))
-    classifier.add(MaxPooling2D(pool_size=(2, 2)))
-    classifier.add(Dropout(0.25))
-
-    classifier.add(Conv2D(64, (3, 3), activation='relu'))
-    classifier.add(Conv2D(64, (3, 3), activation='relu'))
-    classifier.add(MaxPooling2D(pool_size=(2, 2)))
-    classifier.add(Dropout(0.25))
-
-    # Step 3 - Flattening
-    classifier.add(Flatten())
-
-    # Step 4 - Full connection
-    classifier.add(Dense(units=128, activation='relu'))
-    classifier.add(Dropout(0.5))
-    classifier.add(Dense(units=128,
-                         activation='relu'))  # """UNCOMMENT THIS IS ACCURACY DOESNT GO UP | MAYBE MAKE IT 128 INITIALLY"""
-    classifier.add(Dropout(0.5))
-    # classifier.add(Dense(units=1, activation='sigmoid'))
-
-    # Compiling the CNN
-    classifier.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-    return classifier
-
-
-def create_model2():
-    classifier = Sequential()
+def create_model2():  # model creation
+    classifier = Sequential() # adding layers to average out pixel calues and condense amount of pixels
     classifier.add(Conv2D(filters=5, kernel_size=5, padding='same', activation='relu', input_shape=(100, 100, 3)))
     classifier.add(MaxPooling2D(pool_size=4))
     classifier.add(Conv2D(filters=15, kernel_size=5, padding='same', activation='relu'))
     classifier.add(MaxPooling2D(pool_size=4))
-    #classifier.add(Conv2D(filters=15, kernel_size=5, padding='same', activation='relu'))
-    #classifier.add(MaxPooling2D(pool_size=3))
-    classifier.add(Flatten())
-    classifier.add(Dense(3, activation='softmax'))
-    classifier.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
+    classifier.add(Flatten()) # flattening image into an array
+    classifier.add(Dense(3, activation='softmax')) # categorising pixels
+    classifier.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy']) # compiling result
     return classifier
 
 
@@ -87,35 +31,31 @@ def train_data(classifier):
 
     test_datagen = ImageDataGenerator(rescale=1. / 255)
 
+    # creating the parameters for how a training image will be analysed
     training_set = train_datagen.flow_from_directory('dataset/rockpaperscissors/training_set',
                                                      target_size=(100, 100),
                                                      batch_size=1, class_mode='categorical')
 
+    # creating the parameters for how a test image will be analysed
     test_set = test_datagen.flow_from_directory('dataset/rockpaperscissors/test_set',
                                                 target_size=(100, 100),
                                                 batch_size=1, class_mode='categorical')
 
+    # training the model
     classifier.fit_generator(training_set, steps_per_epoch=3086,
                              epochs=20,
                              validation_data=test_set,
                              validation_steps=3086)
 
-    save()
-
-
-def train_data2(classifier):
-    hist = classifier.fit('/content/drive/My Drive/FYP Colab/rockpaperscissors/training_set', validation_split=0.2,
-                          epochs=2, batch_size=1)
-    score = classifier.evaluate('/content/drive/My Drive/FYP Colab/rockpaperscissors/test_set', verbose=0)
-    print(score[1])
+    save() # saving model
 
 
 if __name__ == "__main__":
 
-    if os.path.exists("gestures.h5"):
+    if os.path.exists("gestures.h5"): # if a model already exists load it
         classifier = load_model("gestures.h5")
         print(classifier.summary())
         print("model found")
-    else:
+    else: # if not train a new model
         classifier = create_model2()
         train_data(classifier)

@@ -14,10 +14,6 @@ import matplotlib.pyplot as plt
 time_1 = int(round(time.time()))
 
 vc = cv2.VideoCapture("../flesh_detection/test_vid.mp4")  # video capture [1]
-
-width = np.int(vc.get(cv2.CAP_PROP_FRAME_WIDTH))  # float
-height = np.int(vc.get(cv2.CAP_PROP_FRAME_HEIGHT))  # float
-Nframes = np.int(vc.get(cv2.CAP_PROP_FRAME_COUNT))
 FPS = np.int(vc.get(cv2.CAP_PROP_FPS))
 dim = (640, 480)  # resizing image
 dim2 = (100, 100)
