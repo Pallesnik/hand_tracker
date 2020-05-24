@@ -29,7 +29,8 @@ fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 out = cv2.VideoWriter("output.mp4", fourcc, FPS, dim, True)  # write to an output mp4
 (check, frame) = vc.read()
 f = 0
-lk_params = dict(winSize=(15,15),maxLevel=2,criteria=(cv2.TERM_CRITERIA_EPS|cv2.TERM_CRITERIA_COUNT,10,0.01)) # parameters for feature tracking
+# parameters for feature tracking
+lk_params = dict(winSize=(15,15),maxLevel=2,criteria=(cv2.TERM_CRITERIA_EPS|cv2.TERM_CRITERIA_COUNT,10,0.01))
 criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_MAX_ITER, 10, 0.1)
 num_frames = 0 # initialisation of variables for testing
 certain_frames = 0
@@ -82,8 +83,8 @@ while check: # while video is being processed
                         start = tuple(contours[ci][s][0])
                         end = tuple(contours[ci][e][0])
                         far = tuple(contours[ci][f][0])
-
-                        a = math.sqrt((end[0] - start[0]) ** 2 + (end[1] - start[1]) ** 2) # get the angle created by the start, end and far points
+                        # get the angle created by the start, end and far points
+                        a = math.sqrt((end[0] - start[0]) ** 2 + (end[1] - start[1]) ** 2)
                         b = math.sqrt((far[0] - start[0]) ** 2 + (far[1] - start[1]) ** 2)
                         c = math.sqrt((end[0] - far[0]) ** 2 + (end[1] - far[1]) ** 2)
                         angle = (math.acos((b ** 2 + c ** 2 - a ** 2) / (2 * b * c)) * 180) / 3.14
@@ -139,7 +140,8 @@ while check: # while video is being processed
 
         G = cv2.cvtColor(resized2, cv2.COLOR_BGR2GRAY)  # make a grayscale copy of image
 
-        dots = cv2.goodFeaturesToTrack(G, maxCorners=500, qualityLevel=0.000001, minDistance=10)  # get main feature points of image
+        # get main feature points of image
+        dots = cv2.goodFeaturesToTrack(G, maxCorners=500, qualityLevel=0.000001, minDistance=10)
 
         Z = np.float32(dots)
         Z = np.transpose(Z)

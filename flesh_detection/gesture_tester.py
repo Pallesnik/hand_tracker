@@ -100,8 +100,8 @@ while check: # while the video is being processed
                         start = tuple(contours[ci][s][0])
                         end = tuple(contours[ci][e][0])
                         far = tuple(contours[ci][f][0])
-
-                        a = math.sqrt((end[0] - start[0]) ** 2 + (end[1] - start[1]) ** 2) # use law of cosines to get angle
+                        # use law of cosines to get angle
+                        a = math.sqrt((end[0] - start[0]) ** 2 + (end[1] - start[1]) ** 2)
                         b = math.sqrt((far[0] - start[0]) ** 2 + (far[1] - start[1]) ** 2)
                         c = math.sqrt((end[0] - far[0]) ** 2 + (end[1] - far[1]) ** 2)
                         angle = (math.acos((b ** 2 + c ** 2 - a ** 2) / (2 * b * c)) * 180) / 3.14
@@ -129,7 +129,8 @@ while check: # while the video is being processed
                     if paper == certainty_level: # level of certainty for displaying
                         cv2.putText(resized, 'Paper', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
                         certain_frames = certain_frames + certainty_level
-                        false_pos += certainty_level # adding false positive values that will be removed if guess matches label
+                        # adding false positive values that will be removed if guess matches label
+                        false_pos += certainty_level
                         false_paper += certainty_level
                     elif paper > certainty_level:
                         cv2.putText(resized, 'Paper', (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
