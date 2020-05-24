@@ -1,8 +1,28 @@
+"""
+Flesh detector
+Author: Peter Kinsella, C16338263
+Date: 24-05-2020
+
+Process:
+1. Load in the ground truth table and video
+2. Convert frame to YCbCr colour space and threshold
+3. Segment hand from the rest of the frame
+4. Get the contours of the hand and sort contours by area to get largest one
+5. Get Convex hull and convexity defects of largest contour
+6. Use cosine rule to reduce defects down to only the ones in between fingers
+7. print and count defects
+8. Using number of defects determine the hand gesture being shown
+9. Gather the main feature points of the hand using Shi-Tomasi method
+10. Track points using Optical Flow method via Lucas-Kanade
+11. Print final results for analysis
+"""
 import cv2
 import numpy as np
 import math
+import time
 
-vc = cv2.VideoCapture("lubin.mp4")  # video capture
+time1 = int(round(time.time()))
+vc = cv2.VideoCapture("kevin.mp4")  # video capture
 FPS = np.int(vc.get(cv2.CAP_PROP_FPS))
 dim = (640, 480)  # resizing image
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -55,7 +75,6 @@ while check: # while video is being processed
             hull2 = cv2.convexHull(contours[ci], returnPoints=False)
             defects = cv2.convexityDefects(contours[ci], hull2) # getting all defects in the hull
             num_def = 0
-
             if defects is not None: # if there are defects
                 for i in range(defects.shape[0]): # cycle through all defects
                     if defects.any():
@@ -137,10 +156,10 @@ while check: # while video is being processed
         if f > 0:
             # delete the dots:
             del dots
-
             # Calculate optical flow:
             dots, status, error = cv2.calcOpticalFlowPyrLK(prevImg=prevFrame, nextImg=G, prevPts=prevPts,
                                                            nextPts=None, **lk_params)
+
             # number of dots:
             N = np.shape(dots)[0]
 
@@ -174,7 +193,9 @@ while check: # while video is being processed
 
     else: # if no frames left end while loop
         print("done")
+        time2 = int(round(time.time()))
+        print("Elapsed Time",time2-time1)
         break
 
 vc.release()
-out.release() # release an output mp4 file
+out.release()  # release an output mp4 file
