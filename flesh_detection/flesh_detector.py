@@ -22,7 +22,7 @@ import math
 import time
 
 time1 = int(round(time.time()))
-vc = cv2.VideoCapture("kevin.mp4")  # video capture
+vc = cv2.VideoCapture("lubin.mp4")  # video capture
 FPS = np.int(vc.get(cv2.CAP_PROP_FPS))
 dim = (640, 480)  # resizing image
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -98,9 +98,9 @@ while check: # while video is being processed
                         cv2.drawContours(resized, [contours[ci]], 0, (0, 255, 0), 2)
                         cv2.drawContours(resized, [hull], 0, (0, 0, 255), 2)
 
-                    else:  # if there were no defects draw hull and contour
-                        cv2.drawContours(resized, [contours[ci]], 0, (0, 255, 0), 2)
-                        cv2.drawContours(resized, [hull], 0, (0, 0, 255), 2)
+                    #else:  # if there were no defects draw hull and contour
+                        #cv2.drawContours(resized, [contours[ci]], 0, (0, 255, 0), 2)
+                        #cv2.drawContours(resized, [hull], 0, (0, 0, 255), 2)
 
                 if num_def == 4:  # check number of defects and depending on number print label to output
                     paper = paper + 1
@@ -185,8 +185,8 @@ while check: # while video is being processed
         prevFrame = G.copy()
 
         cv2.imshow("Hand", resized)  # display final image
-        frame = cv2.flip(resized, 0) # flip image for output
-        out.write(frame)
+        #frame = cv2.flip(resized, 0) # flip image for output
+        out.write(resized)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
